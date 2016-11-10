@@ -14,7 +14,7 @@
 
 #define Bottom_Height    (self.bounds.size.height * 0.18)
 #define TOP_TITLE_HEIGHT (self.bounds.size.height * 0.15)
-
+#define ANIMATE_TIME     5.0
 
 
 
@@ -32,9 +32,21 @@
 @property (nonatomic, assign) BOOL                    canEditProgressView;
 @property (nonatomic, assign) BOOL                    isDragSlider;
 
+@property (nonatomic, assign) CGPoint lastTouchPoint;
+@property (nonatomic, assign, readwrite) TouchesState touchesState;
+
 @end
 
 @implementation XCAVPlayerView
+
++ (instancetype)shareManager{
+    static XCAVPlayerView *playerView = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        playerView = [[XCAVPlayerView alloc]init];
+    });
+    return playerView;
+}
 
 - (instancetype)init{
     self = [super init];
@@ -110,8 +122,10 @@
 
 - (void)setVolum{
     self.clipsToBounds = YES;
-    self.isShowBottomProgressView = YES;
-    self.isShowResumViewAtPlayEnd = YES;
+    self.isShowTopTitleProgressView = YES;
+    self.isShowBottomProgressView   = YES;
+    self.isShowResumViewAtPlayEnd   = YES;
+    self.touchesState = XCTouchesStateUnKnow;
     AVAudioSession *session = [AVAudioSession sharedInstance];
     [session setCategory:AVAudioSessionCategoryPlayback
              withOptions:AVAudioSessionCategoryOptionMixWithOthers
@@ -166,6 +180,11 @@
     self.progressView.hidden = !isShowBottomProgressView;
 }
 
+- (void)setIsShowTopTitleProgressView:(BOOL)isShowTopTitleProgressView{
+    _isShowTopTitleProgressView = isShowTopTitleProgressView;
+    self.topVideoTitleView.hidden = !isShowTopTitleProgressView;
+}
+
 - (void)setIsShowResumViewAtPlayEnd:(BOOL)isShowResumViewAtPlayEnd{
     _isShowResumViewAtPlayEnd = isShowResumViewAtPlayEnd;
 }
@@ -218,6 +237,21 @@
     return YES;
 }
 
++ (void)startPlayInSuperView:(UIView *)superView{
+    if (superView) {
+        if ([XCAVPlayerView shareManager].superview) {
+            [[XCAVPlayerView shareManager] removeFromSuperview];
+        }
+        [XCAVPlayerView shareManager].xzSuperView = superView;
+        [superView addSubview:[XCAVPlayerView shareManager]];
+        [[XCAVPlayerView shareManager] mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.edges.equalTo(superView).with.insets(UIEdgeInsetsZero);
+        }];
+        [[XCAVPlayerView shareManager] play];
+    }
+}
+
+/** 暂停、播放 */
 - (void)playBtnClicked:(UIButton *)sender{
     if (self.avPlayer.rate != 0) {
         [self pause];
@@ -247,18 +281,18 @@
 - (void)sliderCancled:(UISlider *)sender{
     _isDragSlider = NO;
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hiddenProgressView:) object:self];
-    [self performSelector:@selector(hiddenProgressView:) withObject:self afterDelay:3.0];
+    [self performSelector:@selector(hiddenProgressView:) withObject:self afterDelay:ANIMATE_TIME];
 }
 - (void)sliderTouchInside:(UISlider *)sender{
     [self seekToTime:self.progressView.progressSlider.currentProgress];
     _isDragSlider = NO;
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hiddenProgressView:) object:self];
-    [self performSelector:@selector(hiddenProgressView:) withObject:self afterDelay:3.0];
+    [self performSelector:@selector(hiddenProgressView:) withObject:self afterDelay:ANIMATE_TIME];
 }
 - (void)sliderTouchOutside:(UISlider *)sender{
     _isDragSlider = NO;
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hiddenProgressView:) object:self];
-    [self performSelector:@selector(hiddenProgressView:) withObject:self afterDelay:3.0];
+    [self performSelector:@selector(hiddenProgressView:) withObject:self afterDelay:ANIMATE_TIME];
 }
 
 #pragma mark----屏幕手动旋转
@@ -386,6 +420,7 @@
     }
 }
 
+#pragma mark--手势
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
     if (_isShowBottomProgressView) {
         if ([self.progressView isHidden]) {
@@ -394,6 +429,54 @@
             [self hiddenProgressView:YES];
         }
     }
+    _lastTouchPoint = [[touches anyObject] locationInView:self];
+}
+
+- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
+    UITouch *touch = [touches anyObject];
+    CGPoint touchPoint = [touch locationInView:self];
+    CGFloat moveDistanceX = touchPoint.x - _lastTouchPoint.x;
+    CGFloat moveDistanceY = touchPoint.y - _lastTouchPoint.y;
+    _lastTouchPoint = touchPoint;
+    
+    if (_touchesState == XCTouchesStateUnKnow) {
+        if (ABS(moveDistanceY) > ABS(moveDistanceX) && touchPoint.x > 0.8 * self.bounds.size.width) {
+            _touchesState = XCTouchesStateVolume;
+        }else if (ABS(moveDistanceX) > ABS(moveDistanceY) && touchPoint.x > 0.2 * self.bounds.size.width && touchPoint.x < 0.8 * self.bounds.size.width){
+            _touchesState = XCTouchesStateSpeed;
+            _isDragSlider = YES;
+            if (![self.progressView isHidden]) {
+                [self showProgressView:NO];
+                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hiddenProgressView:) object:self];
+            }
+        }else if (ABS(moveDistanceY) > ABS(moveDistanceX) && touchPoint.x < 0.2 * self.bounds.size.width){
+            _touchesState = XCTouchesStateBrightness;
+        }
+    }
+    if (_touchesState == XCTouchesStateBrightness) {
+        
+    }else if (_touchesState == XCTouchesStateSpeed){
+        self.progressView.progressSlider.currentProgress += moveDistanceX * (self.progressView.progressSlider.maxValue / self.bounds.size.width);
+    }else if (_touchesState == XCTouchesStateVolume){
+        
+    }
+}
+
+- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
+    if (_touchesState == XCTouchesStateSpeed) {
+        [self seekToTime:self.progressView.progressSlider.currentProgress];
+    }
+    _isDragSlider = NO;
+    _touchesState = XCTouchesStateUnKnow;
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hiddenProgressView:) object:self];
+    [self performSelector:@selector(hiddenProgressView:) withObject:self afterDelay:ANIMATE_TIME];
+}
+
+- (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
+    _isDragSlider = NO;
+    _touchesState = XCTouchesStateUnKnow;
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hiddenProgressView:) object:self];
+    [self performSelector:@selector(hiddenProgressView:) withObject:self afterDelay:ANIMATE_TIME];
 }
 
 
@@ -409,6 +492,7 @@
             self.progressView.frame = CGRectMake(0, self.bounds.size.height, self.progressView.bounds.size.width, self.progressView.bounds.size.height);
         } completion:^(BOOL finished) {
             self.progressView.hidden = YES;
+            self.topVideoTitleView.hidden = YES;
             self.canEditProgressView = YES;
         }];
     }else{
@@ -425,7 +509,8 @@
         return;
     }
     _canEditProgressView = NO;
-    self.progressView.hidden = NO;
+    self.progressView.hidden = !_isShowBottomProgressView;
+    self.topVideoTitleView.hidden = !_isShowTopTitleProgressView;
     if (animate) {
         [UIView animateWithDuration:0.2 animations:^{
             self.topVideoTitleView.frame = CGRectMake(0, 0, self.topVideoTitleView.bounds.size.width, TOP_TITLE_HEIGHT);
@@ -439,7 +524,7 @@
         self.canEditProgressView = YES;
     }
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hiddenProgressView:) object:self];
-    [self performSelector:@selector(hiddenProgressView:) withObject:self afterDelay:3.0];
+    [self performSelector:@selector(hiddenProgressView:) withObject:self afterDelay:ANIMATE_TIME];
 }
 
 #pragma notification
@@ -467,6 +552,9 @@
             [[UIApplication sharedApplication].keyWindow addSubview:self];
             self.frame = [UIApplication sharedApplication].keyWindow.bounds;
         }
+        [self mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.edges.equalTo([UIApplication sharedApplication].keyWindow).with.insets(UIEdgeInsetsZero);
+        }];
     }else if ([UIApplication sharedApplication].statusBarOrientation == UIInterfaceOrientationPortraitUpsideDown || [UIApplication sharedApplication].statusBarOrientation == UIInterfaceOrientationPortrait){
         if ([[UIApplication sharedApplication].keyWindow.subviews containsObject:self]) {
             [self removeFromSuperview];
@@ -474,8 +562,11 @@
         if (![self.xzSuperView.subviews containsObject:self]) {
             [self.xzSuperView addSubview:self];
         }
-        self.frame = self.xzSuperView.bounds;
+        [self mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.edges.equalTo(self.xzSuperView).with.insets(UIEdgeInsetsZero);
+        }];
     }
+    [self layoutIfNeeded];
 }
 
 /** 后台 */

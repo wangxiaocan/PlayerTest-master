@@ -15,6 +15,13 @@ typedef NS_ENUM(NSInteger,XCAVPlayerStatues){
     XCPlayerStatusPlayEnd,
 };
 
+typedef NS_ENUM(NSInteger,TouchesState){
+    XCTouchesStateVolume,
+    XCTouchesStateSpeed,
+    XCTouchesStateBrightness,
+    XCTouchesStateUnKnow,
+};
+
 @class XCAVPlayerView;
 
 @protocol XCAVPlayerDelegate <NSObject>
@@ -34,14 +41,22 @@ typedef NS_ENUM(NSInteger,XCAVPlayerStatues){
 @property (nonatomic,   copy) NSString *videoTitle;/**< 视频标题 */
 @property (nonatomic, strong) NSURL *playerUrl;/**< 播放链接 */
 
+
 @property (nonatomic, assign) id<XCAVPlayerDelegate> delegate;
 @property (nonatomic, assign) Float64 currentPlayTime;/**< current play time */
 @property (nonatomic, assign) Float64 totalDuration;/**< video duration */
 @property (nonatomic, assign) Float64 timeInterval;/**< available Duration (cached) */
 
+@property (nonatomic, assign) BOOL    isShowTopTitleProgressView;/**< default is YES */
 @property (nonatomic, assign) BOOL    isShowBottomProgressView;/**< default is YES */
 @property (nonatomic, assign) BOOL    isShowResumViewAtPlayEnd;/**< default is YES */
 
+@property (nonatomic, assign, readonly) TouchesState touchesState;/**< 手势状态 */
+
+
++ (instancetype)shareManager;
+
++ (void)startPlayInSuperView:(UIView *)superView;
 
 /** 播放状态 */
 - (BOOL)isPlaying;
