@@ -17,6 +17,6 @@
 
 - (void)resume;
 
-- (void)resumeAndStart
+- (void)resumeAndStart;
 
 @end
