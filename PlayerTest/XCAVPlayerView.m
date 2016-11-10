@@ -198,6 +198,7 @@
     if (_avPlayer) {
         [_avPlayer pause];
     }
+    [self.topVideoTitleView resume];
 }
 
 /** 重新开始 */
@@ -205,6 +206,7 @@
     [self.avPlayer seekToTime:kCMTimeZero];
     if (self.avPlayer.rate == 0.0) {
         [self.avPlayer play];
+        [self.topVideoTitleView resumeAndStart];
     }
 }
 
@@ -219,9 +221,11 @@
 - (void)playBtnClicked:(UIButton *)sender{
     if (self.avPlayer.rate != 0) {
         [self pause];
+        [self.topVideoTitleView resume];
         [self.progressView.playBtn setImage:[UIImage imageNamed:@"icon_play"] forState:UIControlStateNormal];
     }else{
         [self play];
+        [self.topVideoTitleView resumeAndStart];
         [self.progressView.playBtn setImage:[UIImage imageNamed:@"icon_pause"] forState:UIControlStateNormal];
     }
 }

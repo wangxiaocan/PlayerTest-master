@@ -33,6 +33,14 @@
 
     [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(statuesBarChanged:) name:UIApplicationDidChangeStatusBarOrientationNotification object:nil];
     
+    UISwitch *switchOne = [[UISwitch alloc]init];
+    switchOne.on = YES;
+    [switchOne addTarget:self action:@selector(valueChanged:) forControlEvents:UIControlEventValueChanged];
+    [self.view addSubview:switchOne];
+    [switchOne mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.center.equalTo(self.view);
+    }];
+    
     UIView *playBgView = [[UIView alloc]initWithFrame:CGRectMake(0, 20.0, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.width * 0.58)];
     [self.view addSubview:playBgView];
     self.playerView.frame = playBgView.bounds;
@@ -41,10 +49,6 @@
     self.playerView.videoTitle = @"测试视频一";
     [self.playerView play];
     
-    UISwitch *switchOne = [[UISwitch alloc]initWithFrame:CGRectMake(100.0, 200.0, 40.0, 40.0)];
-    switchOne.on = YES;
-    [switchOne addTarget:self action:@selector(valueChanged:) forControlEvents:UIControlEventValueChanged];
-    [self.view addSubview:switchOne];
 }
 
 
