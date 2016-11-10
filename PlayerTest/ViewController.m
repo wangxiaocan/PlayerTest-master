@@ -14,6 +14,8 @@
 
 @interface ViewController ()
 
+@property (nonatomic, strong) XCAVPlayerView *playerView;
+
 @end
 
 @implementation ViewController
@@ -41,6 +43,16 @@
         make.centerX.equalTo(self.view.mas_centerX);
         make.centerY.equalTo(playBgView.mas_bottom).with.offset(60.0);
     }];
+    
+    /*
+    _playerView = [[XCAVPlayerView alloc]init];
+    UIView *playBgView = [[UIView alloc]initWithFrame:CGRectMake(0, 20.0, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.width * 0.58)];
+    [self.view addSubview:playBgView];
+    self.playerView.frame = playBgView.bounds;
+    [playBgView addSubview:self.playerView];
+    self.playerView.playerUrl = [NSURL URLWithString:@"http://api.feixiong.tv/Api/Base/getShortM3u8?params=%7B%22data%22%3A%7B%22id%22%3A281%2C%22stream_type%22%3A%22hd2%22%2C%22ykss%22%3A%22%22%7D%7D"];
+    [self.playerView play];
+     */
     
 }
 
