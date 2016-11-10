@@ -64,7 +64,8 @@
     [_currentTimeLabel mas_makeConstraints:^(MASConstraintMaker *make) {
         make.top.equalTo(self.mas_top);
         make.bottom.equalTo(self.mas_bottom);
-        make.left.equalTo(self.playBtn.mas_right).with.offset(5.0);
+        make.left.equalTo(self.playBtn.mas_right);
+        make.width.equalTo(_totalDurationLabel.mas_width);
     }];
     
     [_progressSlider mas_makeConstraints:^(MASConstraintMaker *make) {
