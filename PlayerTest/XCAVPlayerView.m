@@ -155,6 +155,7 @@
             [self.avPlayer.currentItem.asset cancelLoading];
             self.avPlayer = nil;
         }
+        self.resumeBtn.hidden = YES;
         self.canEditProgressView = YES;
         [self hiddenProgressView:NO];
         self.canEditProgressView = NO;
@@ -207,6 +208,7 @@
 - (void)play{
     if (_avPlayer) {
         [_avPlayer play];
+        self.resumeBtn.hidden = YES;
         [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(currentXCPlayerTime) object:nil];
         [self performSelector:@selector(currentXCPlayerTime) withObject:nil afterDelay:0.5];
     }
@@ -225,6 +227,7 @@
     [self.avPlayer seekToTime:kCMTimeZero];
     if (self.avPlayer.rate == 0.0) {
         [self.avPlayer play];
+        self.resumeBtn.hidden = YES;
         [self.topVideoTitleView resumeAndStart];
     }
 }
