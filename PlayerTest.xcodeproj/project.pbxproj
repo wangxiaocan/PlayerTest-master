@@ -21,6 +21,8 @@
 		5F6DA87A1D37404A0095B8CA /* XZPlayProgressView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5F6DA8791D37404A0095B8CA /* XZPlayProgressView.m */; };
 		5FA36BE61D3656F700A086F6 /* XCAVPlayerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5FA36BE51D3656F700A086F6 /* XCAVPlayerView.m */; };
 		726A026C1DD449A600C35029 /* XCSlideView.m in Sources */ = {isa = PBXBuildFile; fileRef = 726A026B1DD449A600C35029 /* XCSlideView.m */; };
+		726B16C41DD57436006DEAFC /* XCBrightnessView.m in Sources */ = {isa = PBXBuildFile; fileRef = 726B16C31DD57435006DEAFC /* XCBrightnessView.m */; };
+		726B16C61DD574A5006DEAFC /* Icon_Brightness_Image.png in Resources */ = {isa = PBXBuildFile; fileRef = 726B16C51DD574A5006DEAFC /* Icon_Brightness_Image.png */; };
 		727850871DD31D2300FEA2F7 /* XCMarqueeView.m in Sources */ = {isa = PBXBuildFile; fileRef = 727850861DD31D2300FEA2F7 /* XCMarqueeView.m */; };
 		727850BC1DD326CA00FEA2F7 /* MASCompositeConstraint.m in Sources */ = {isa = PBXBuildFile; fileRef = 727850A41DD326CA00FEA2F7 /* MASCompositeConstraint.m */; };
 		727850BD1DD326CA00FEA2F7 /* MASConstraint.m in Sources */ = {isa = PBXBuildFile; fileRef = 727850A71DD326CA00FEA2F7 /* MASConstraint.m */; };
@@ -82,6 +84,9 @@
 		5FA36BE51D3656F700A086F6 /* XCAVPlayerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XCAVPlayerView.m; sourceTree = "<group>"; };
 		726A026A1DD449A600C35029 /* XCSlideView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCSlideView.h; sourceTree = "<group>"; };
 		726A026B1DD449A600C35029 /* XCSlideView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XCSlideView.m; sourceTree = "<group>"; };
+		726B16C21DD57435006DEAFC /* XCBrightnessView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCBrightnessView.h; sourceTree = "<group>"; };
+		726B16C31DD57435006DEAFC /* XCBrightnessView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XCBrightnessView.m; sourceTree = "<group>"; };
+		726B16C51DD574A5006DEAFC /* Icon_Brightness_Image.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon_Brightness_Image.png; sourceTree = "<group>"; };
 		727850851DD31D2300FEA2F7 /* XCMarqueeView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XCMarqueeView.h; sourceTree = "<group>"; };
 		727850861DD31D2300FEA2F7 /* XCMarqueeView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XCMarqueeView.m; sourceTree = "<group>"; };
 		727850A31DD326CA00FEA2F7 /* MASCompositeConstraint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MASCompositeConstraint.h; sourceTree = "<group>"; };
@@ -225,6 +230,8 @@
 				726A026B1DD449A600C35029 /* XCSlideView.m */,
 				5F6DA8781D37404A0095B8CA /* XZPlayProgressView.h */,
 				5F6DA8791D37404A0095B8CA /* XZPlayProgressView.m */,
+				726B16C21DD57435006DEAFC /* XCBrightnessView.h */,
+				726B16C31DD57435006DEAFC /* XCBrightnessView.m */,
 			);
 			name = XCAVPlayerView;
 			sourceTree = "<group>";
@@ -264,6 +271,7 @@
 		727850C61DD3287C00FEA2F7 /* imagsSource */ = {
 			isa = PBXGroup;
 			children = (
+				726B16C51DD574A5006DEAFC /* Icon_Brightness_Image.png */,
 				727850C71DD3287C00FEA2F7 /* 0846CAA8FBC1D7EF520398982F3235D4.png */,
 				727850C81DD3287C00FEA2F7 /* 9A2AB0559EBB65143CF96ED7036253B9.png */,
 				727850C91DD3287C00FEA2F7 /* icon_full@2x.png */,
@@ -373,6 +381,7 @@
 				727850DB1DD3287C00FEA2F7 /* icon_play@2x.png in Resources */,
 				727850D51DD3287C00FEA2F7 /* 0846CAA8FBC1D7EF520398982F3235D4.png in Resources */,
 				727850E21DD3287C00FEA2F7 /* icon_repeat_video@3x.png in Resources */,
+				726B16C61DD574A5006DEAFC /* Icon_Brightness_Image.png in Resources */,
 				727850DD1DD3287C00FEA2F7 /* icon_play_hl@2x.png in Resources */,
 				727850D91DD3287C00FEA2F7 /* icon_pause@2x.png in Resources */,
 				727850DF1DD3287C00FEA2F7 /* icon_progress@2x.png in Resources */,
@@ -410,6 +419,7 @@
 				727850C31DD326CA00FEA2F7 /* NSLayoutConstraint+MASDebugAdditions.m in Sources */,
 				5F0AE1F71D338939005995F6 /* AppDelegate.m in Sources */,
 				727850BC1DD326CA00FEA2F7 /* MASCompositeConstraint.m in Sources */,
+				726B16C41DD57436006DEAFC /* XCBrightnessView.m in Sources */,
 				727850BF1DD326CA00FEA2F7 /* MASLayoutConstraint.m in Sources */,
 				726A026C1DD449A600C35029 /* XCSlideView.m in Sources */,
 				5F0AE1F41D338939005995F6 /* main.m in Sources */,

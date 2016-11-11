@@ -15,6 +15,7 @@
 @interface ViewController ()
 
 @property (nonatomic, strong) XCAVPlayerView *playerView;
+@property (nonatomic, strong) MPVolumeView            *volumeView;//音量
 
 @end
 
@@ -53,7 +54,7 @@
     self.playerView.playerUrl = [NSURL URLWithString:@"http://api.feixiong.tv/Api/Base/getShortM3u8?params=%7B%22data%22%3A%7B%22id%22%3A281%2C%22stream_type%22%3A%22hd2%22%2C%22ykss%22%3A%22%22%7D%7D"];
     [self.playerView play];
      */
-    
+
 }
 
 

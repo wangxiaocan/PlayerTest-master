@@ -11,6 +11,8 @@
 #import "XCMarqueeView.h"
 #import <AVFoundation/AVFoundation.h>
 #import "XCSlideView.h"
+#import <MediaPlayer/MediaPlayer.h>
+#import "XCBrightnessView.h"
 
 #define Bottom_Height    (self.bounds.size.height * 0.18)
 #define TOP_TITLE_HEIGHT (self.bounds.size.height * 0.15)
@@ -26,6 +28,8 @@
 @property (nonatomic, strong) AVPlayerItem            *playerItem;
 @property (nonatomic, strong) XCMarqueeView           *topVideoTitleView;//顶部视频标题view
 @property (nonatomic, strong) XZPlayProgressView      *progressView;//底部进度条
+@property (nonatomic, strong) MPVolumeView            *volumeView;//音量
+@property (nonatomic, strong) XCBrightnessView        *brightnessView;//亮度
 @property (nonatomic, strong) UIActivityIndicatorView *activityView;
 @property (nonatomic, strong) UIButton                *resumeBtn;
 @property (nonatomic, strong) UIView                  *xzSuperView;
@@ -46,14 +50,6 @@
         playerView = [[XCAVPlayerView alloc]init];
     });
     return playerView;
-}
-
-- (instancetype)init{
-    self = [super init];
-    if (self) {
-        [self setVolum];
-    }
-    return self;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame{
@@ -105,6 +101,18 @@
     return _topVideoTitleView;
 }
 
+- (XCBrightnessView *)brightnessView{
+    if (!_brightnessView) {
+        _brightnessView = [[XCBrightnessView alloc]init];
+        _brightnessView.hidden = YES;
+        [self addSubview:_brightnessView];
+        [_brightnessView mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.center.equalTo(self);
+        }];
+    }
+    return _brightnessView;
+}
+
 - (UIButton *)resumeBtn{
     if (!_resumeBtn) {
         _resumeBtn = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -120,6 +128,15 @@
     return _resumeBtn;
 }
 
+- (MPVolumeView *)volumeView{
+    if (!_volumeView) {
+        _volumeView = [[MPVolumeView alloc]init];
+        _volumeView.hidden = YES;
+        [self addSubview:_volumeView];
+    }
+    return _volumeView;
+}
+
 - (void)setVolum{
     self.clipsToBounds = YES;
     self.isShowTopTitleProgressView = YES;
@@ -133,6 +150,8 @@
     [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(playerPlayToEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(statusBarWillChanged:) name:UIApplicationDidChangeStatusBarOrientationNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationEnterbackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
+    UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(tapOnceGesture:)];
+    [self addGestureRecognizer:tapGesture];
 }
 
 - (void)setVideoTitle:(NSString *)videoTitle{
@@ -423,15 +442,17 @@
     }
 }
 
-#pragma mark--手势
-- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
-    if (_isShowBottomProgressView) {
-        if ([self.progressView isHidden]) {
-            [self showProgressView:YES];
-        }else{
-            [self hiddenProgressView:YES];
-        }
+#pragma mark----单击手势
+- (void)tapOnceGesture:(UITapGestureRecognizer *)gesture{
+    if ([self.progressView isHidden]) {
+        [self showProgressView:YES];
+    }else{
+        [self hiddenProgressView:YES];
     }
+}
+
+#pragma mark----滑动手势
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
     _lastTouchPoint = [[touches anyObject] locationInView:self];
 }
 
@@ -448,19 +469,27 @@
         }else if (ABS(moveDistanceX) > ABS(moveDistanceY) && touchPoint.x > 0.2 * self.bounds.size.width && touchPoint.x < 0.8 * self.bounds.size.width){
             _touchesState = XCTouchesStateSpeed;
             _isDragSlider = YES;
-            if (![self.progressView isHidden]) {
-                [self showProgressView:NO];
-                [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hiddenProgressView:) object:self];
-            }
+            [self showProgressView:NO];
+            [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hiddenProgressView:) object:self];
         }else if (ABS(moveDistanceY) > ABS(moveDistanceX) && touchPoint.x < 0.2 * self.bounds.size.width){
             _touchesState = XCTouchesStateBrightness;
+            self.brightnessView.hidden = NO;
         }
     }
     if (_touchesState == XCTouchesStateBrightness) {
-        
+        if (moveDistanceY > 0) {
+            [self changeBrightnessValue:-0.02f];
+        }else{
+            [self changeBrightnessValue:0.02f];
+        }
     }else if (_touchesState == XCTouchesStateSpeed){
         self.progressView.progressSlider.currentProgress += moveDistanceX * (self.progressView.progressSlider.maxValue / self.bounds.size.width);
     }else if (_touchesState == XCTouchesStateVolume){
+        if (moveDistanceY > 0) {
+            [self changeValumeValue:-0.02f];
+        }else{
+            [self changeValumeValue:0.02f];
+        }
         
     }
 }
@@ -471,6 +500,7 @@
     }
     _isDragSlider = NO;
     _touchesState = XCTouchesStateUnKnow;
+    self.brightnessView.hidden = YES;
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hiddenProgressView:) object:self];
     [self performSelector:@selector(hiddenProgressView:) withObject:self afterDelay:ANIMATE_TIME];
 }
@@ -478,8 +508,26 @@
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
     _isDragSlider = NO;
     _touchesState = XCTouchesStateUnKnow;
+    self.brightnessView.hidden = YES;
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hiddenProgressView:) object:self];
     [self performSelector:@selector(hiddenProgressView:) withObject:self afterDelay:ANIMATE_TIME];
+}
+
+
+#pragma mark----音量
+- (void)changeValumeValue:(CGFloat)valume{
+    for (UISlider *slider in self.volumeView.subviews) {
+        if ([slider isKindOfClass:[UISlider class]]) {
+            [slider setValue:slider.value + valume animated:YES];
+            break;
+        }
+    }
+}
+
+#pragma mark----亮度
+- (void)changeBrightnessValue:(CGFloat)brightness{
+    [UIScreen mainScreen].brightness += brightness;
+    self.brightnessView.brightnessValue = [UIScreen mainScreen].brightness;
 }
 
 
@@ -489,6 +537,8 @@
         return;
     }
     _canEditProgressView = NO;
+    [self.topVideoTitleView.layer removeAllAnimations];
+    [self.progressView.layer removeAllAnimations];
     if (animate) {
         [UIView animateWithDuration:0.2 animations:^{
             self.topVideoTitleView.frame = CGRectMake(0, -TOP_TITLE_HEIGHT, self.topVideoTitleView.bounds.size.width, self.topVideoTitleView.bounds.size.height);
@@ -512,6 +562,8 @@
         return;
     }
     _canEditProgressView = NO;
+    [self.topVideoTitleView.layer removeAllAnimations];
+    [self.progressView.layer removeAllAnimations];
     self.progressView.hidden = !_isShowBottomProgressView;
     self.topVideoTitleView.hidden = !_isShowTopTitleProgressView;
     if (animate) {
@@ -569,6 +621,8 @@
             make.edges.equalTo(self.xzSuperView).with.insets(UIEdgeInsetsZero);
         }];
     }
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hiddenProgressView:) object:self];
+    [self showProgressView:NO];
     [self layoutIfNeeded];
 }
 
