@@ -13,6 +13,7 @@
 #import "XCSlideView.h"
 #import <MediaPlayer/MediaPlayer.h>
 #import "XCBrightnessView.h"
+#import "XCSpeedView.h"
 
 #define Bottom_Height    (self.bounds.size.height * 0.18)
 #define TOP_TITLE_HEIGHT (self.bounds.size.height * 0.15)
@@ -30,6 +31,7 @@
 @property (nonatomic, strong) XZPlayProgressView      *progressView;//底部进度条
 @property (nonatomic, strong) MPVolumeView            *volumeView;//音量
 @property (nonatomic, strong) XCBrightnessView        *brightnessView;//亮度
+@property (nonatomic, strong) XCSpeedView             *speedView;//快进视图
 @property (nonatomic, strong) UIActivityIndicatorView *activityView;
 @property (nonatomic, strong) UIButton                *resumeBtn;
 @property (nonatomic, strong) UIView                  *xzSuperView;
@@ -111,6 +113,18 @@
         }];
     }
     return _brightnessView;
+}
+
+- (XCSpeedView *)speedView{
+    if (!_speedView) {
+        _speedView = [[XCSpeedView alloc]init];
+        _speedView.hidden = YES;
+        [self addSubview:_speedView];
+        [_speedView mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.center.equalTo(self);
+        }];
+    }
+    return _speedView;
 }
 
 - (UIButton *)resumeBtn{
@@ -357,14 +371,16 @@
 
 /** 播放时间 00:00:00 */
 - (NSString *)convertTimeToString:(CGFloat)second{
-    NSDate *pastDate = [NSDate dateWithTimeIntervalSince1970:second];
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    if (second/3600 >= 1) {
-        [formatter setDateFormat:@"HH:mm:ss"];
+    NSInteger hourValue = (NSInteger)(second / 3600);
+    NSInteger minuteValue = (NSInteger)((NSInteger)second % 3600 / 60);
+    NSInteger secondValue = (NSInteger)((NSInteger)second % 3600 % 60);
+    NSString *timeString = nil;
+    if (hourValue >= 1) {
+        timeString = [NSString stringWithFormat:@"%02ld:%02ld:%02ld",(long)hourValue,(long)minuteValue,(long)secondValue];
     } else {
-        [formatter setDateFormat:@"mm:ss"];
+        timeString = [NSString stringWithFormat:@"%02ld:%02ld",(long)minuteValue,(long)secondValue];
     }
-    NSString *timeString = [formatter stringFromDate:pastDate];
+    
     return timeString;
 }
 
@@ -470,6 +486,7 @@
             _touchesState = XCTouchesStateSpeed;
             _isDragSlider = YES;
             [self showProgressView:NO];
+            self.speedView.hidden = NO;
             [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hiddenProgressView:) object:self];
         }else if (ABS(moveDistanceY) > ABS(moveDistanceX) && touchPoint.x < 0.2 * self.bounds.size.width){
             _touchesState = XCTouchesStateBrightness;
@@ -484,6 +501,10 @@
         }
     }else if (_touchesState == XCTouchesStateSpeed){
         self.progressView.progressSlider.currentProgress += moveDistanceX * (self.progressView.progressSlider.maxValue / self.bounds.size.width);
+        self.speedView.totalTime = self.progressView.progressSlider.maxValue;
+        self.speedView.currentTime = self.progressView.progressSlider.currentProgress;
+        self.progressView.currentTimeLabel.text = [self convertTimeToString:self.progressView.progressSlider.currentProgress];
+        self.speedView.isFastForward = (moveDistanceX > 0);
     }else if (_touchesState == XCTouchesStateVolume){
         if (moveDistanceY > 0) {
             [self changeValumeValue:-0.02f];
@@ -500,6 +521,7 @@
     }
     _isDragSlider = NO;
     _touchesState = XCTouchesStateUnKnow;
+    self.speedView.hidden = YES;
     self.brightnessView.hidden = YES;
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hiddenProgressView:) object:self];
     [self performSelector:@selector(hiddenProgressView:) withObject:self afterDelay:ANIMATE_TIME];
@@ -508,6 +530,7 @@
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
     _isDragSlider = NO;
     _touchesState = XCTouchesStateUnKnow;
+    self.speedView.hidden = YES;
     self.brightnessView.hidden = YES;
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(hiddenProgressView:) object:self];
     [self performSelector:@selector(hiddenProgressView:) withObject:self afterDelay:ANIMATE_TIME];
